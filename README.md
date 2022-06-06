@@ -1,7 +1,7 @@
 
 # Manage Url API  
 
-This API provides functionality for shortening and expanding your url.
+This API provides functionality for shortening your url.
 
 ## Requirements:
 
@@ -39,12 +39,6 @@ Check Django project in [browser](http://localhost:8000/)
 ```json
 {
   "url": "https://github.com/ellisonleao/pyshorteners/"
-}
-```
-[expand_endpoint](http://localhost:8000/url/expand/)
-```json
-{
-  "url": "https://tinyurl.com/pglfnnj"
 }
 ```
 

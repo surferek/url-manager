@@ -1,50 +1,79 @@
-from django.test import TestCase
-from rest_framework.test import APIClient
+import pytest
+from rest_framework.status import (
+    HTTP_200_OK, HTTP_201_CREATED, HTTP_400_BAD_REQUEST, HTTP_409_CONFLICT
+)
+
+from .models import UrlBind
 
 
-class ManageUrlTestCase(TestCase):
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_shorten_create(client):
+    post_data = {
+        "url": "https://github.com/ellisonleao/pyshorteners/"
+    }
+    request = client.post('/shorten/', post_data)
 
-    def setUp(self):
-        self.client = APIClient()
+    shorten_obj = UrlBind.objects.get(short_url=request.data['short_url'])
+    expected_response = {
+        "short_url": shorten_obj.short_url
+    }
 
-    def test_shorten_url(self):
-        self.client = APIClient()
-        post_data = {
-            "url": "https://github.com/ellisonleao/pyshorteners/"
-        }
-        request = self.client.post('/url/shorten/', post_data)
-        expected_response = {
-            "short_url": "https://tinyurl.com/pglfnnj"
-        }
-        self.assertEqual(request.status_code, 200)
-        self.assertEqual(request.data, expected_response)
+    assert request.status_code, HTTP_201_CREATED
+    assert request.data, expected_response
 
-    def test_expand_url(self):
-        self.client = APIClient()
-        post_data = {
-            "url": "https://tinyurl.com/pglfnnj"
-        }
-        request = self.client.post('/url/expand/', post_data)
-        expected_response = {
-            "long_url": "https://github.com/ellisonleao/pyshorteners/"
-        }
-        self.assertEqual(request.status_code, 200)
-        self.assertEqual(request.data, expected_response)
 
-    def test_shorten_url_validation_error(self):
-        self.client = APIClient()
-        post_data = {
-            "url": "For sure not URL"
-        }
-        request = self.client.post('/url/shorten/', post_data)
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_shorten_create_the_same_url_twice(client):
+    post_data = {
+        "url": "https://github.com/ellisonleao/pyshorteners/"
+    }
+    request = client.post('/shorten/', post_data)
+    shorten_obj = UrlBind.objects.get(short_url=request.data['short_url'])
 
-        self.assertEqual(request.status_code, 400)
+    expected_response = {
+        "url": "https://github.com/ellisonleao/pyshorteners/",
+        "short_url": shorten_obj.short_url
+    }
+    request = client.post('/shorten/', post_data)
 
-    def test_expand_url_validation_error(self):
-        self.client = APIClient()
-        post_data = {
-            "url": "For sure not URL"
-        }
-        request = self.client.post('/url/expand/', post_data)
+    assert request.status_code, HTTP_409_CONFLICT
+    assert request.data, expected_response
 
-        self.assertEqual(request.status_code, 400)
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_shorten_create_validation_error(client):
+    post_data = {
+        "url": "For sure not URL"
+    }
+    request = client.post('/shorten/', post_data)
+
+    assert request.status_code, HTTP_400_BAD_REQUEST
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_shorten_list(client, ulr_binder):
+    request = client.get('/shorten/')
+    expected_response = [{
+        'id': 1,
+        'url': 'https://realpython.com/1',
+        'short_url': 'http://localhost:8000/test_1'
+    }, {
+        'id': 2,
+        'url': 'https://realpython.com/2',
+        'short_url': 'http://localhost:8000/test_2'
+    }]
+
+    assert request.status_code, HTTP_200_OK
+    assert request.data, expected_response
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_shorten_retrieve(client, ulr_binder):
+    request = client.get('/shorten/1/')
+    expected_response = {
+        'id': 1,
+        'url': 'https://realpython.com/1',
+        'short_url': 'http://localhost:8000/test_1'
+    }
+    assert request.status_code, HTTP_200_OK
+    assert request.data, expected_response

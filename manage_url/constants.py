@@ -1,0 +1,2 @@
+URL_SIGNS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!*^$-_"
+SHORTEN_URL = 'shorten'

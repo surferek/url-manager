@@ -121,3 +121,7 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+URL_SUFFIX_SIZE = 8
+
+TEST_RUNNER = 'urler.test_runner.PytestTestRunner'

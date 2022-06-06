@@ -1,39 +1,41 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+import random
+
+from django.conf import settings
 from rest_framework.response import Response
-from rest_framework.status import HTTP_200_OK, HTTP_400_BAD_REQUEST
+from rest_framework.status import HTTP_201_CREATED, HTTP_409_CONFLICT
 
-from pyshorteners import Shortener
-from .validators import is_url
-
-
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def shorten_url(request):
-    url = request.data['url']
-    if not is_url(url):
-        return Response("Please provide valid url", HTTP_400_BAD_REQUEST)
-
-    shortener = Shortener()
-    short_url = shortener.tinyurl.short(url)
-
-    response = {
-        "short_url": short_url
-    }
-    return Response(response, HTTP_200_OK)
+from urler.viewsets import ReadAndCreateViewSet
+from .constants import URL_SIGNS, SHORTEN_URL
+from .models import UrlBind
+from .serializers import UrlBindReadSerializer, UrlBindCreateSerializer
+from .utils import get_host_url
 
 
-@api_view(['POST'])
-@permission_classes([AllowAny])
-def expand_url(request):
-    url = request.data['url']
-    if not is_url(url):
-        return Response("Please provide valid url", HTTP_400_BAD_REQUEST)
+class UrlBindViewSet(ReadAndCreateViewSet):
+    queryset = UrlBind.objects.all()
 
-    shortener = Shortener()
-    long_url = shortener.tinyurl.expand(url)
+    def get_serializer_class(self):
+        if self.action in ("list", "retrieve"):
+            return UrlBindReadSerializer
+        return UrlBindCreateSerializer
 
-    response = {
-        "long_url": long_url
-    }
-    return Response(response, HTTP_200_OK)
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        url = serializer.validated_data['url']
+        suffix = ("".join(random.sample(URL_SIGNS, settings.URL_SUFFIX_SIZE)))
+        short_url = get_host_url(request, SHORTEN_URL) + suffix
+
+        try:
+            bind = UrlBind.objects.get(url=url)
+        except UrlBind.DoesNotExist:
+            UrlBind.objects.create(
+                url=url,
+                short_url=short_url
+            )
+        else:
+            return Response({'url': bind.url, 'short_url': bind.short_url}, HTTP_409_CONFLICT)
+
+        headers = self.get_success_headers(serializer.data)
+        return Response({'short_url': short_url}, HTTP_201_CREATED, headers=headers)
