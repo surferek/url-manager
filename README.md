@@ -35,7 +35,7 @@ Check Django project in [browser](http://localhost:8000/)
 ## Examples  
 
 ----
-[shorten_endpoint](http://localhost:8000/url/shorten/)
+[shorten_endpoint](http://localhost:8000/shorten/)
 ```json
 {
   "url": "https://github.com/ellisonleao/pyshorteners/"
