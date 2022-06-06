@@ -18,7 +18,7 @@ from django.urls import path, include
 from rest_framework import routers
 
 from manage_url.urls import router as manage_url
-from manage_url.utils import redirect_url
+from utils.utils import redirect_url
 
 router = routers.DefaultRouter()
 

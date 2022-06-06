@@ -5,10 +5,10 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED, HTTP_409_CONFLICT
 
 from urler.viewsets import ReadAndCreateViewSet
-from .constants import URL_SIGNS, SHORTEN_URL
+from utils.constants import URL_SIGNS, SHORTEN_URL
 from .models import UrlBind
 from .serializers import UrlBindReadSerializer, UrlBindCreateSerializer
-from .utils import get_host_url
+from utils.utils import get_host_url
 
 
 class UrlBindViewSet(ReadAndCreateViewSet):
